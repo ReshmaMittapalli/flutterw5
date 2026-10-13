@@ -1,417 +1,60 @@
-
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 void main() {
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => CatalogModel(),
-      child: const MyApp(),
-    ),
-  );
+  runApp(const MyToggleApp());
 }
 
-// ITEM MODEL
-class CatalogItem {
-  final int id;
-  final String name;
-  final String description;
-  final IconData icon;
-  final Color color;
-  bool isFavorite;
-
-  CatalogItem({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.icon,
-    required this.color,
-    this.isFavorite = false,
-  });
-}
-
-// SHARED STATE USING PROVIDER
-class CatalogModel extends ChangeNotifier {
-  final List<CatalogItem> _items = [
-    CatalogItem(
-      id: 1,
-      name: 'Laptop',
-      description: 'Powerful devices for work and study.',
-      icon: Icons.laptop_mac,
-      color: Colors.deepPurple,
-    ),
-    CatalogItem(
-      id: 2,
-      name: 'Smartphone',
-      description: 'Stay connected wherever you go.',
-      icon: Icons.smartphone,
-      color: Colors.blue,
-    ),
-    CatalogItem(
-      id: 3,
-      name: 'Headphones',
-      description: 'Enjoy music with immersive sound.',
-      icon: Icons.headphones,
-      color: Colors.orange,
-    ),
-    CatalogItem(
-      id: 4,
-      name: 'Camera',
-      description: 'Capture your favorite memories.',
-      icon: Icons.camera_alt,
-      color: Colors.pink,
-    ),
-    CatalogItem(
-      id: 5,
-      name: 'Smart Watch',
-      description: 'Track your activity every day.',
-      icon: Icons.watch,
-      color: Colors.teal,
-    ),
-    CatalogItem(
-      id: 6,
-      name: 'Tablet',
-      description: 'A flexible screen for entertainment.',
-      icon: Icons.tablet_mac,
-      color: Colors.green,
-    ),
-  ];
-
-  List<CatalogItem> get items => List.unmodifiable(_items);
-
-  int get favoriteCount =>
-      _items.where((item) => item.isFavorite).length;
-
-  void toggleFavorite(int id) {
-    final item = _items.firstWhere((item) => item.id == id);
-    item.isFavorite = !item.isFavorite;
-    notifyListeners();
-  }
-}
-
-// APPLICATION
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyToggleApp extends StatelessWidget {
+  const MyToggleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Responsive State Demo',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
-        ),
-      ),
-      home: const CatalogPage(),
+      home: ToggleScreen(),
     );
   }
 }
 
-// RESPONSIVE HOME PAGE
-class CatalogPage extends StatelessWidget {
-  const CatalogPage({super.key});
+class ToggleScreen extends StatefulWidget {
+  const ToggleScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-
-        if (width >= 1024) {
-          return const DesktopLayout();
-        } else if (width >= 600) {
-          return const TabletLayout();
-        } else {
-          return const MobileLayout();
-        }
-      },
-    );
-  }
+  State<ToggleScreen> createState() => _ToggleScreenState();
 }
 
-// REUSABLE ITEM CARD
-class ItemCard extends StatelessWidget {
-  final CatalogItem item;
+class _ToggleScreenState extends State<ToggleScreen> {
+  bool isOn = false;
 
-  const ItemCard({super.key, required this.item});
+  void toggleSwitch(bool value) {
+    setState(() {
+      isOn = value;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.all(8),
-      elevation: 3,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Toggle Switch'),
+        backgroundColor: Colors.teal,
+        foregroundColor: Colors.white,
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: item.color.withAlpha(30),
-                  child: Icon(
-                    item.icon,
-                    color: item.color,
-                    size: 30,
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  tooltip: item.isFavorite
-                      ? 'Remove from favorites'
-                      : 'Add to favorites',
-                  onPressed: () {
-                    context
-                        .read<CatalogModel>()
-                        .toggleFavorite(item.id);
-                  },
-                  icon: Icon(
-                    item.isFavorite
-                        ? Icons.star
-                        : Icons.star_border,
-                    color: item.isFavorite
-                        ? Colors.amber
-                        : Colors.grey,
-                    size: 30,
-                  ),
-                ),
-              ],
+            Switch(
+              value: isOn,
+              onChanged: toggleSwitch,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             Text(
-              item.name,
+              isOn ? 'Switch is ON' : 'Switch is OFF',
               style: const TextStyle(
-                fontSize: 19,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              item.description,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.black54,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// FAVORITE COUNT
-class FavoriteCount extends StatelessWidget {
-  const FavoriteCount({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final count = context.watch<CatalogModel>().favoriteCount;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.star, color: Colors.amber),
-          const SizedBox(width: 5),
-          Text(
-            '$count',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// MOBILE: SINGLE-COLUMN LIST
-class MobileLayout extends StatelessWidget {
-  const MobileLayout({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final items = context.watch<CatalogModel>().items;
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F3FA),
-      appBar: AppBar(
-        title: const Text('Product Catalog'),
-        actions: const [FavoriteCount()],
-      ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(8),
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          return SizedBox(
-            height: 190,
-            child: ItemCard(item: items[index]),
-          );
-        },
-      ),
-    );
-  }
-}
-
-// TABLET: TWO-COLUMN GRID
-class TabletLayout extends StatelessWidget {
-  const TabletLayout({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final items = context.watch<CatalogModel>().items;
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F3FA),
-      appBar: AppBar(
-        title: const Text('Product Catalog'),
-        actions: const [FavoriteCount()],
-      ),
-      body: GridView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: items.length,
-        gridDelegate:
-            const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 1.35,
-        ),
-        itemBuilder: (context, index) {
-          return ItemCard(item: items[index]);
-        },
-      ),
-    );
-  }
-}
-
-// DESKTOP: NAVIGATION RAIL + THREE-COLUMN GRID
-class DesktopLayout extends StatelessWidget {
-  const DesktopLayout({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final items = context.watch<CatalogModel>().items;
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F3FA),
-      appBar: AppBar(
-        title: const Text('Responsive State Demo'),
-        actions: const [FavoriteCount()],
-      ),
-      body: Row(
-        children: [
-          NavigationRail(
-            selectedIndex: 0,
-            onDestinationSelected: (_) {},
-            labelType: NavigationRailLabelType.all,
-            destinations: const [
-              NavigationRailDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home),
-                label: Text('Home'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.shopping_bag_outlined),
-                selectedIcon: Icon(Icons.shopping_bag),
-                label: Text('Catalog'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.star_border),
-                selectedIcon: Icon(Icons.star),
-                label: Text('Favorites'),
-              ),
-            ],
-          ),
-          const VerticalDivider(width: 1),
-          Expanded(
-            child: Column(
-              children: [
-                Expanded(
-                  child: GridView.builder(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: items.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 1.1,
-                    ),
-                    itemBuilder: (context, index) {
-                      return ItemCard(item: items[index]);
-                    },
-                  ),
-                ),
-                const CounterWidget(),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// LOCAL STATE USING setState()
-class CounterWidget extends StatefulWidget {
-  const CounterWidget({super.key});
-
-  @override
-  State<CounterWidget> createState() => _CounterWidgetState();
-}
-
-class _CounterWidgetState extends State<CounterWidget> {
-  int counter = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 24,
-          vertical: 12,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Local Counter:',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Text(
-              '$counter',
-              style: const TextStyle(
-                fontSize: 20,
-                color: Colors.deepPurple,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(width: 16),
-            IconButton.filled(
-              onPressed: () {
-                setState(() {
-                  counter++;
-                });
-              },
-              icon: const Icon(Icons.add),
-              tooltip: 'Increment counter',
             ),
           ],
         ),
